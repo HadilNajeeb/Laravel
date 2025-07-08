@@ -1,66 +1,254 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# 📡 Laravel HTTP Requests - Summary
 
-## About Laravel
+Laravel provides a powerful, object-oriented approach to handle HTTP requests using the `Illuminate\Http\Request` class. This README summarizes the core features and usage patterns.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📥 Accessing the Request
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+You can inject the request via **dependency injection** in controllers or route closures:
 
-## Learning Laravel
+```php
+use Illuminate\Http\Request;
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+public function store(Request $request) {
+    $name = $request->input('name');
+}
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+With routes:
+```php
+Route::get('/', function (Request $request) {
+    // ...
+});
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Route Parameters with Requests
+```php
+public function update(Request $request, string $id) {
+    // Use $request and $id
+}
+```
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+## 🛣 Request Information
 
-### Premium Partners
+### Path and URL
+- `path()`: returns path part of the URL (`foo/bar`)
+- `is()`: checks if path matches a pattern
+- `routeIs()`: checks if matched route name matches
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+### Full URLs
+- `url()`: base URL (without query string)
+- `fullUrl()`: full URL (with query string)
+- `fullUrlWithQuery([...])`
+- `fullUrlWithoutQuery([...])`
 
-## Contributing
+### Host and Scheme
+```php
+$request->host();
+$request->httpHost();
+$request->schemeAndHttpHost();
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### HTTP Method
+```php
+$request->method();
+$request->isMethod('post');
+```
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🧾 Headers & IP
 
-## Security Vulnerabilities
+- `header('X-Header')`, `hasHeader()`
+- `bearerToken()` – for Authorization header
+- `ip()`, `ips()` – client IP(s)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 📄 Content Negotiation
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```php
+$request->getAcceptableContentTypes();
+$request->accepts(['application/json']);
+$request->prefers(['html', 'json']);
+$request->expectsJson();
+```
+
+---
+
+## 🔁 PSR-7 Requests
+
+Laravel can convert to/from **PSR-7** requests with:
+```bash
+composer require symfony/psr-http-message-bridge nyholm/psr7
+```
+
+---
+
+## 📥 Retrieving Input
+
+### Get All Input
+```php
+$request->all();
+$request->collect(); // As Collection
+```
+
+### Single Inputs
+```php
+$request->input('name', 'default');
+$request->query('name', 'default');
+$request->input('products.0.name');
+```
+
+### Typed Inputs
+- `string('field')->trim()`
+- `integer('field')`
+- `boolean('field')`
+- `array('field')`
+- `date('field')`
+- `enum('status', Status::class)`
+
+### Dynamic Access
+```php
+$request->name;
+```
+
+---
+
+## ✂️ Filtering Input
+
+- `only('name', 'email')`
+- `except('token')`
+
+---
+
+## ✅ Checking Input Presence
+
+- `has('field')`, `hasAny([...])`
+- `filled('field')`, `isNotFilled('field')`
+- `anyFilled([...])`
+- `missing('field')`
+
+Conditional execution:
+```php
+$request->whenFilled('name', fn ($name) => ...);
+$request->whenMissing('name', fn () => ...);
+```
+
+---
+
+## 🔄 Merging Input
+
+```php
+$request->merge(['key' => 'value']);
+$request->mergeIfMissing(['key' => 'value']);
+```
+
+---
+
+## ♻️ Old Input (Session)
+
+- Flash input:  
+  ```php
+  $request->flash();
+  $request->flashOnly(['username']);
+  $request->flashExcept('password');
+  ```
+
+- With redirect:
+  ```php
+  return redirect()->back()->withInput();
+  ```
+
+- Get old input:
+  ```php
+  old('username');
+  ```
+
+---
+
+## 🍪 Cookies
+
+```php
+$request->cookie('name');
+```
+
+Cookies are encrypted and signed by default.
+
+---
+
+## ✂️ Input Normalization
+
+By default:
+- **Trims strings**
+- **Converts empty strings to null**
+
+To disable globally (in `bootstrap/app.php`):
+```php
+$middleware->remove([TrimStrings::class, ConvertEmptyStringsToNull::class]);
+```
+
+Or selectively:
+```php
+$middleware->trimStrings(except: [fn (Request $r) => $r->is('admin/*')]);
+```
+
+---
+
+## 📁 File Uploads
+
+### Get Uploaded File
+```php
+$request->file('photo');
+$request->photo;
+```
+
+### Check Presence & Validity
+```php
+$request->hasFile('photo');
+$request->file('photo')->isValid();
+```
+
+### File Info
+```php
+$path = $request->photo->path();
+$extension = $request->photo->extension();
+```
+
+### Store File
+```php
+$request->photo->store('images');
+$request->photo->store('images', 's3');
+$request->photo->storeAs('images', 'file.jpg');
+```
+
+---
+
+## 🛡 Trusted Proxies & Hosts
+
+Configure **trusted proxies** for HTTPS and headers:
+
+```php
+$middleware->trustProxies(at: ['192.168.1.1']);
+$middleware->trustProxies(headers: Request::HEADER_X_FORWARDED_ALL);
+```
+
+To trust all proxies:
+```php
+$middleware->trustProxies(at: '*');
+```
+
+Restrict Laravel to specific hosts:
+```php
+$middleware->trustHosts(at: ['example.com'], subdomains: false);
+```
+
+---
+
+## ✅ Final Tip
+
+Always validate your request input before processing! Use Laravel's validation system to ensure clean, secure data.
